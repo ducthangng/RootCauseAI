@@ -33,6 +33,7 @@ def clean_date():
         quoting=csv.QUOTE_NONE,    # CDESCR is free text and contains stray " characters — pandas' default quoting will misparse rows around them
         na_filter=False,           # keep empty fields as "" instead of NaN; you want that distinction for a column like FAILDATE
         low_memory=False,
+        nrows=100
     )
 
     numeric_cols = ["INJURED", "DEATHS", "MILES", "OCCURENCES", "NUM_CYLS", "VEH_SPEED"]
@@ -62,29 +63,46 @@ def clean_date():
                 # Step 4: clear the original column
                 df.loc[i, col] = pd.NaT
 
-    df.to_csv("cleaned_input.csv", index=False)
-
-
-def read_file():
-    df = pd.read_csv(
-        "cleaned_input.csv",
-        dtype=str,              # still read everything as string first — parse dates explicitly after, don't trust auto-inference
-        na_filter=False,        # keep this if you still want "" instead of NaN for untouched blank fields
-        low_memory=False,
+    # clean cols with too short context
+    df = df.drop(
+        df[df["COMPDESC"].str.len() <= 5].index
     )
 
-    date_cols = ["FAILDATE", "DATEA", "LDATE", "PURCH_DT", "MANUF_DT"]
-    for col in date_cols:
-        df[col] = pd.to_datetime(df[col], errors="coerce")  # "" and garbage both become NaT here
+    # remove duplicates
+    df = df.drop_duplicates(subset="CMPLID")
 
-    raw_cols = [col + "_RAW_INVALID" for col in date_cols]
-    for col in raw_cols:
-        df[col] = pd.to_datetime(df[col], errors="coerce")
+    # make the MFR_NAME universal
+    df['MFR_NAME'] = df['MFR_NAME'].str.strip().str.upper().str.replace(" ", "_")
 
-    raw_cols = df.loc[df[raw_cols].notna().any(axis=1)]
+    # merge row with the same CDESCR
+    # 1. Define your primary identifier (the Report ID column)
+    report_id_col = 'ODINO' 
 
-    # newdf = df.loc[df["FAILDATE_RAW_INVALID"].notna() | df["DATEA_RAW_INVALID"].notna() | df["LDATE_RAW_INVALID"].notna() | df["PURCH_DT_RAW_INVALID"].notna() | df["MANUF_DT_RAW_INVALID"].notna()]
-    raw_cols.to_csv("small-input.csv",index=False)
+    # 2. Dynamically build the aggregation rules for all 54 columns
+    agg_dict = {}
+
+    for col in df.columns:
+        if col == report_id_col:
+            # Skip the grouping column; Pandas handles it automatically
+            continue 
+        elif col == 'CMPLID':
+            # Rule for CMPLID: Take the smaller ID
+            agg_dict[col] = 'min'
+        elif col == 'COMPDESC':
+            # Rule for COMPDESC: Merge the unique descriptions with a separator
+            agg_dict[col] = lambda x: ' | '.join(x.dropna().astype(str).unique())
+        else:
+            # Rule for all other 51 columns: Keep the first value found
+            agg_dict[col] = 'first'
+
+    # 3. Group by the Report ID and apply the rules
+    df = df.groupby(report_id_col, as_index=False).agg(agg_dict)
+    
+    # !TODO: add rich texts
+    df['summary'] = 'a ' + df['MAKETXT'] + " model " + df['MODELTXT'] + " produced in " + df["YEARTXT"] + " was " + df['COMPDESC'] + " with detail: " + df['CDESCR']
+
+    df.to_csv("cleaned_input.csv", index=False)
+
 
     
 

@@ -1,0 +1,16 @@
+services:
+  postgres:
+    build: .
+    container_name: rootcauseai-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rootcauseai
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: rootcauseai
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata: 
