@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import csv
+import sys
 
 COLUMNS = [
     "CMPLID", "ODINO", "MFR_NAME", "MAKETXT", "MODELTXT", "YEARTXT",
@@ -102,6 +103,56 @@ def clean_date():
     df['summary'] = 'a ' + df['MAKETXT'] + " model " + df['MODELTXT'] + " produced in " + df["YEARTXT"] + " was " + df['COMPDESC'] + " with detail: " + df['CDESCR']
 
     df.to_csv("cleaned_input.csv", index=False)
+
+INPUT_PATH = "assets/cleaned_input.csv"
+OUTPUT_PATH = "assets/cleaned_input_fixed.csv"
+BAD_ROWS_LOG = "assets/bad_rows.log"
+
+csv.field_size_limit(sys.maxsize)
+
+def clean_row_quotation():
+    with open(INPUT_PATH, newline="", encoding="utf-8", errors="replace") as f_in:
+        reader = csv.reader(f_in)
+        header = next(reader)
+        expected_cols = len(header)
+        print(f"Header có {expected_cols} cột")
+ 
+        good_rows = []
+        bad_rows = []
+ 
+        for line_num, row in enumerate(reader, start=2):  # dòng 1 là header
+            if len(row) == expected_cols:
+                # Loại bỏ hẳn ký tự " khỏi nội dung — đây là nguồn gốc DUY NHẤT của mọi
+                # lỗi quoting đã gặp (14" tire, "no problem", v.v. trong free text).
+                # Không cần giữ vì không mang ý nghĩa cấu trúc, chỉ là dấu câu.
+                cleaned_row = [cell.replace('"', "") for cell in row]
+                good_rows.append(cleaned_row)
+            else:
+                bad_rows.append((line_num, len(row), row))
+ 
+    print(f"readable: {len(good_rows) + len(bad_rows)}")
+    print(f"valid: {len(good_rows)}")
+    print(f"invalid (#cols): {len(bad_rows)}")
+ 
+    # log chi tiết dòng lỗi — KHÔNG tự ý sửa, để bạn tự quyết định
+    if bad_rows:
+        with open(BAD_ROWS_LOG, "w", encoding="utf-8") as f_log:
+            for line_num, n_fields, row in bad_rows:
+                f_log.write(f"--- Line {line_num} (expected {expected_cols}, got {n_fields}) ---\n")
+                f_log.write(",".join(row) + "\n\n")
+        print(f"Đã log {len(bad_rows)} dòng lỗi vào {BAD_ROWS_LOG} — xem thủ công trước khi quyết định")
+ 
+    # ghi ra CSV sạch, quoting=ALL để loại bỏ hoàn toàn ambiguity về sau
+    with open(OUTPUT_PATH, "w", newline="", encoding="utf-8") as f_out:
+        writer = csv.writer(f_out, quoting=csv.QUOTE_ALL)
+        writer.writerow(header)
+        writer.writerows(good_rows)
+ 
+    print(f"Đã ghi file sạch: {OUTPUT_PATH} ({len(good_rows)} dòng, không tính header)")
+    print("Upload file NÀY (không phải file gốc) lên Colab.")
+ 
+ 
+
 
 
     
