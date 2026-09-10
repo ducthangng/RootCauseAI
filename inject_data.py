@@ -18,6 +18,15 @@ def inject():
     for col in raw_cols:
         df[col] = pd.to_datetime(df[col], errors="coerce")
 
+    raw_cols = df.loc[df["MFR_NAME"] == ""]
+    print(len(raw_cols.index))
+
+    raw_cols = df.loc[df["CMPLID"] == ""]
+    print(len(raw_cols.index))
+
+    raw_cols = df.loc[df["ODINO"] == ""]
+    print(len(raw_cols.index))
+
     
     # print(len(df.index))
     # df.sort_values(by='DEATHS', ascending=False).head(100).to_csv("input.csv", index=False)
@@ -28,5 +37,5 @@ def inject():
     # !TODO: check for cols with too short context
     # !TODO: check for cols with sensitive values
 
-    connect_pg.insert_dataframe(df)
+    # connect_pg.insert_dataframe(df)
 

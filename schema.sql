@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS complaints (
     -- Identity fields (NOT NULL theo yêu cầu)
     cmplid              CHAR(9)     NOT NULL,
     odino               CHAR(9)     NOT NULL,
-    mfr_name            VARCHAR(40) NOT NULL,
+    mfr_name            VARCHAR(40),
 
     -- Vehicle / equipment info
     maketxt             VARCHAR(25),
@@ -16,9 +16,9 @@ CREATE TABLE IF NOT EXISTS complaints (
     faildate            DATE,
     faildate_raw_invalid       TEXT,
     fire                CHAR(1),
-    injured             SMALLINT,
-    deaths              SMALLINT,
-    compdesc            VARCHAR(128),
+    injured             NUMERIC(10, 2),
+    deaths              NUMERIC(10, 2),
+    compdesc            TEXT,
     city                VARCHAR(30),
     state               CHAR(2),
     vin                 CHAR(11),
@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS complaints (
     ldate               DATE,
     ldate_raw_invalid          TEXT,
 
-    miles               INTEGER,
-    occurences          SMALLINT,
+    miles               NUMERIC(10, 2),
+    occurences          NUMERIC(10, 2),
     cdescr              TEXT,
     cmpl_type           VARCHAR(4),
     police_rpt_yn       CHAR(1),
@@ -40,12 +40,12 @@ CREATE TABLE IF NOT EXISTS complaints (
     orig_owner_yn       CHAR(1),
     anti_brakes_yn      CHAR(1),
     cruise_cont_yn      CHAR(1),
-    num_cyls            SMALLINT,
+    num_cyls            NUMERIC(10, 2),
     drive_train         VARCHAR(4),
     fuel_sys            VARCHAR(4),
     fuel_type           VARCHAR(4),
     trans_type          VARCHAR(4),
-    veh_speed           SMALLINT,
+    veh_speed           NUMERIC(10, 2),
 
     dot                 VARCHAR(20),
     tire_size           VARCHAR(30),

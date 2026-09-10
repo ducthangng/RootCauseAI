@@ -1,8 +1,11 @@
 import clean_data
 import inject_data
+import copy_data
 
 def main():
-    clean_data.clean_row_quotation()
+    copy_data.import_csv()
+    # copy_data.get_line()
+    # clean_data.clean_row_quotation()
     # clean_data.clean_date()
 
     # inject_data.inject()
