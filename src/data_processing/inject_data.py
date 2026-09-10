@@ -1,6 +1,6 @@
 
 import pandas as pd
-import connect_pg
+import src.data_processing.connect_pg
 
 def inject():
     df = pd.read_csv(
