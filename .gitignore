@@ -3,3 +3,12 @@
 
 /__pycache__
 /.venv
+/assets
+
+.env
+
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.env

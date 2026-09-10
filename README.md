@@ -27,7 +27,7 @@ Field#  Name              Type/Size     Description
 9       FIRE              CHAR(1)       WAS VEHICLE INVOLVED IN A FIRE 'Y' OR 'N'
 10      INJURED           NUMBER(2)     NUMBER OF PERSONS INJURED
 11      DEATHS            NUMBER(2)     NUMBER OF FATALITIES
-12      COMPDESC          CHAR(128)     SPECIFIC COMPONENT'S DESCRIPTION
+12      COMPDESC          CHAR(256)     SPECIFIC COMPONENT'S DESCRIPTION
 13      CITY              CHAR(30)      CONSUMER'S CITY
 14      STATE             CHAR(2)       CONSUMER'S STATE CODE
 15      VIN               CHAR(11)      VEHICLE'S VIN#
