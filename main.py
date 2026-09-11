@@ -3,6 +3,8 @@ import src.data_processing.inject_data as inject_data
 import src.data_processing.copy_data as copy_data
 from src.action_graph.node_types import AgentState
 from src.action_graph.graph import build_graph
+import time
+
 
 def main():
     # copy_data.import_csv()
@@ -11,8 +13,13 @@ def main():
     # clean_data.clean_date()
     # inject_data.inject()
 
+    # t0 = time.perf_counter()
+    # cur.execute(query, (query_vector, query_vector))
+    # rows = cur.fetchall()
+    # print(f"Latency: {(time.perf_counter() - t0) * 1000:.2f}ms")
+
     initial_state: AgentState = {
-        "incident_text": "Xe mất phanh đột ngột ở tốc độ cao",
+        "incident_text": "car broke down because the break was stuck",
         "retrieved_docs": [],
         "draft_report": "",
         "critique": "", 
@@ -32,7 +39,8 @@ def main():
     print("STATE CUỐI CÙNG:")
     print("=" * 60)
     for k, v in final_state.items():
-        print(f"  {k}: {v}")
+        if k != "retrieved_docs":
+            print(f"  {k}: {v}")
 
 
 if __name__ == "__main__":
