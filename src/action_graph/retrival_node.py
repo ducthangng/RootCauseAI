@@ -2,7 +2,8 @@ import os
 import psycopg2
 from typing import List
 from .node_types import AgentState, RetrievedDoc, log
-from .clients import embed_model
+from .clients import embed_model, db_pool
+import time
 
 def get_db_connection():
     return psycopg2.connect(
@@ -22,9 +23,10 @@ def retrieve_node(state: AgentState) -> dict:
     query_text = f"search_query: {state['incident_text']}"
     query_vector = embed_model.encode(query_text, normalize_embeddings=True).tolist()
 
-    conn = get_db_connection()
-    try:
+    conn = db_pool.getconn()
+    try:    
         with conn.cursor() as cur:
+            t0 = time.perf_counter()
             cur.execute(
                 """
                 SELECT id, cmplid, odino, mfr_name, modeltxt, compdesc, cdescr, 1 - (embedding <=> %s::vector) AS score
@@ -35,8 +37,10 @@ def retrieve_node(state: AgentState) -> dict:
                 (query_vector, query_vector, 20),
             )
             rows = cur.fetchall()
+            db_latency_ms = (time.perf_counter() - t0) * 1000
+            print(f"    -> [TIMING] DB query: {db_latency_ms:.2f}ms")
     finally:
-        conn.close()
+        db_pool.putconn(conn)   
 
     docs: List[RetrievedDoc] = [
         {

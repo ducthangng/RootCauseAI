@@ -1,5 +1,6 @@
 services:
   postgres:
+    shm_size: '1gb'
     build: .
     container_name: rootcauseai-pg
     restart: unless-stopped
