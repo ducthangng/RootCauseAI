@@ -1,8 +1,8 @@
 import src.data_processing.clean_data as clean_data
 import src.data_processing.inject_data as inject_data
 import src.data_processing.copy_data as copy_data
-from src.action_graph.node_types import AgentState
-from src.action_graph.graph import build_graph
+from src.action_graph import build_graph, run_ragas_eval, AgentState
+
 import time
 
 
@@ -17,6 +17,9 @@ def main():
     # cur.execute(query, (query_vector, query_vector))
     # rows = cur.fetchall()
     # print(f"Latency: {(time.perf_counter() - t0) * 1000:.2f}ms")
+
+    run_ragas_eval()
+    return
 
     initial_state: AgentState = {
         "incident_text": "car broke down because the break was stuck",

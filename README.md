@@ -1,114 +1,56 @@
-NHTSA Complaints (primary recommendation)
+# NHTSA Complaints Dataset (Processed & Embedded Version)
 
-Bulk flat file (all complaints, ~354 MB, this is your 500k+ row source): https://static.nhtsa.gov/odi/ffdd/cmpl/FLAT_CMPL.zip
-Field/schema layout for that flat file (you'll need this — it's pipe-delimited, no header row): https://www.nhtsa.gov/nhtsa-datasets-and-apis
-REST API (good for incremental/live lookups, not for the bulk 500k dump): https://api.nhtsa.gov/complaints/complaintsByVehicle?make={MAKE}&model={MODEL}&modelYear={YEAR}
-NHTSA Recalls flat file (post-2010, ~14MB — you'll want this too, since your product decides "recall or not"): https://static.nhtsa.gov/odi/ffdd/rcl/FLAT_RCL_POST_2010.zip
-Pre-cleaned Kaggle mirror if you want to skip the raw flat-file parsing pain (2019–present only, smaller): https://www.kaggle.com/datasets/alshival/nhtsa-complaints
+This document describes the data structure after cleaning, slimming down, and enriching for analysis and feature extraction.
 
-Field#  Name              Type/Size     Description
-------  ---------         ---------     --------------------------------------
-1       CMPLID            CHAR(9)       NHTSA'S INTERNAL UNIQUE SEQUENCE NUMBER.
-                                        IS AN UPDATEABLE FIELD,THUS DATA FOR A
-                                        GIVEN RECORD POTENTIALLY COULD CHANGE FROM
-                                        ONE DATA OUTPUT FILE TO THE NEXT.
-2       ODINO             CHAR(9)       NHTSA'S INTERNAL REFERENCE NUMBER.
-                                        THIS NUMBER MAY BE REPEATED FOR
-                                        MULTIPLE COMPONENTS.
-                                        ALSO, IF LDATE IS PRIOR TO DEC 15, 2002,
-                                        THIS NUMBER MAY BE REPEATED FOR MULTIPLE
-                                        PRODUCTS OWNED BY THE SAME COMPLAINANT.
-3       MFR_NAME          CHAR(40)      MANUFACTURER'S NAME
-4       MAKETXT           CHAR(25)      VEHICLE/EQUIPMENT MAKE
-5       MODELTXT          CHAR(256)     VEHICLE/EQUIPMENT MODEL
-6       YEARTXT           CHAR(4)       MODEL YEAR, 9999 IF UNKNOWN or N/A
-7       CRASH             CHAR(1)       WAS VEHICLE INVOLVED IN A CRASH, 'Y' OR 'N'
-8       FAILDATE          CHAR(8)       DATE OF INCIDENT (YYYYMMDD)
-9       FIRE              CHAR(1)       WAS VEHICLE INVOLVED IN A FIRE 'Y' OR 'N'
-10      INJURED           NUMBER(2)     NUMBER OF PERSONS INJURED
-11      DEATHS            NUMBER(2)     NUMBER OF FATALITIES
-12      COMPDESC          CHAR(256)     SPECIFIC COMPONENT'S DESCRIPTION
-13      CITY              CHAR(30)      CONSUMER'S CITY
-14      STATE             CHAR(2)       CONSUMER'S STATE CODE
-15      VIN               CHAR(11)      VEHICLE'S VIN#
-16      DATEA             CHAR(8)       DATE ADDED TO FILE (YYYYMMDD)
-17      LDATE             CHAR(8)       DATE COMPLAINT RECEIVED BY NHTSA (YYYYMMDD)
-18      MILES             NUMBER(7)     VEHICLE MILEAGE AT FAILURE
-19      OCCURENCES        NUMBER(4)     NUMBER OF OCCURRENCES
-20      CDESCR            CHAR(2048)    DESCRIPTION OF THE COMPLAINT
-21      CMPL_TYPE         CHAR(4)       SOURCE OF COMPLAINT CODE:
-                                          CAG  =CONSUMER ACTION GROUP
-                                          CON  =FORWARDED FROM A CONGRESSIONAL OFFICE
-                                          DP   =DEFECT PETITION,RESULT OF A DEFECT PETITION
-                                          EVOQ =HOTLINE VOQ
-                                          EWR  =EARLY WARNING REPORTING
-                                          INS  =INSURANCE COMPANY
-                                          IVOQ =NHTSA WEB SITE
-                                          LETR =CONSUMER LETTER
-                                          MAVQ =NHTSA MOBILE APP
-                                          MIVQ =NHTSA MOBILE APP
-                                          MVOQ =OPTICAL MARKED VOQ
-                                          RC   =RECALL COMPLAINT,RESULT OF A RECALL INVESTIGATION
-                                          RP   =RECALL PETITION,RESULT OF A RECALL PETITION
-                                          SVOQ =PORTABLE SAFETY COMPLAINT FORM (PDF)
-                                          VOQ  =NHTSA VEHICLE OWNERS QUESTIONNAIRE
-22      POLICE_RPT_YN     CHAR(1)       WAS INCIDENT REPORTED TO POLICE 'Y' OR 'N'
-23      PURCH_DT          CHAR(8)       DATE PURCHASED (YYYYMMDD)
-24      ORIG_OWNER_YN     CHAR(1)       WAS ORIGINAL OWNER 'Y' OR 'N'
-25      ANTI_BRAKES_YN    CHAR(1)       ANTI-LOCK BRAKES 'Y' OR 'N'
-26      CRUISE_CONT_YN    CHAR(1)       CRUISE CONTROL 'Y' OR 'N'
-27      NUM_CYLS          NUMBER(2)     NUMBER OF CYLINDERS
-28      DRIVE_TRAIN       CHAR(4)       DRIVE TRAIN TYPE [AWD,4WD,FWD,RWD]
-29      FUEL_SYS          CHAR(4)       FUEL SYSTEM CODE:
-                                           FI =FUEL INJECTION
-                                           TB =TURBO
-30      FUEL_TYPE         CHAR(4)       FUEL TYPE CODE:
-                                           BF =BIFUEL
-                                           CN =CNG/LPG
-                                           DS =DIESEL
-                                           GS =GAS
-                                           HE =HYBRID ELECTRIC
-31      TRANS_TYPE        CHAR(4)       VEHICLE TRANSMISSION TYPE [AUTO, MAN]
-32      VEH_SPEED         NUMBER(3)     VEHICLE SPEED
-33      DOT               CHAR(20)      DEPARTMENT OF TRANSPORTATION TIRE IDENTIFIER
-34      TIRE_SIZE         CHAR(30)      TIRE SIZE
-35      LOC_OF_TIRE       CHAR(4)       LOCATION OF TIRE CODE:
-                                           FSW =DRIVER SIDE FRONT
-                                           DSR =DRIVER SIDE REAR
-                                           FTR =PASSENGER SIDE FRONT
-                                           PSR =PASSENGER SIDE REAR
-                                           SPR =SPARE
-36      TIRE_FAIL_TYPE    CHAR(4)       TYPE OF TIRE FAILURE CODE:
-                                           BST =BLISTER
-                                           BLW =BLOWOUT
-                                           TTL =CRACK
-                                           OFR =OUT OF ROUND
-                                           TSW =PUNCTURE
-                                           TTR =ROAD HAZARD
-                                           TSP =TREAD SEPARATION
-37      ORIG_EQUIP_YN     CHAR(1)       WAS PART ORIGINAL EQUIPMENT 'Y' OR 'N'
-38      MANUF_DT          CHAR(8)       DATE OF MANUFACTURE (YYYYMMDD)
-39      SEAT_TYPE         CHAR(4)       TYPE OF CHILD SEAT CODE:
-                                           B  =BOOSTER
-                                           C  =CONVERTIBLE
-                                           I  =INFANT
-                                           IN =INTEGRATED
-                                           TD =TODDLER
-40     RESTRAINT_TYPE     CHAR(4)       INSTALLATION SYSTEM CODE;
-                                           A =VEHICLE SAFETY BELT
-                                           B =LATCH SYSTEM
-41     DEALER_NAME        CHAR(40)      DEALER'S NAME
-42     DEALER_TEL         CHAR(20)      DEALER'S TELEPHONE NUMBER
-43     DEALER_CITY        CHAR(30)      DEALER'S CITY
-44     DEALER_STATE       CHAR(2)       DEALER'S STATE CODE
-45     DEALER_ZIP         CHAR(10)      DEALER'S ZIPCODE
-46     PROD_TYPE          CHAR(4)       PRODUCT TYPE CODE:
-                                           V =VEHICLE
-                                           T =TIRES
-                                           E =EQUIPMENT
-                                           C =CHILD RESTRAINT
-47     REPAIRED_YN        CHAR(1)       WAS DEFECTIVE TIRE REPAIRED 'Y' OR 'N'
-48     MEDICAL_ATTN       CHAR(1)       WAS MEDICAL ATTENTION REQUIRED 'Y' OR 'N'
-49     VEHICLES_TOWED_YN  CHAR(1)       WAS VEHICLE TOWED 'Y' OR 'N'
-50     STATE_OF_INCIDENT  CHAR(2)       INCIDENT STATE CODE
-51     VEHICLE_OPERATOR   CHAR(40)      VEHICLE OPERATOR'S NAME
+### 📝 Summary of Changes
+*   **Slimmed Down:** Removed unnecessary columns, keeping only the top 8 most important original fields.
+*   **Cleaned:** Fixed date parsing errors; moved invalid date strings to the `_RAW_DATE` column.
+*   **Enriched:** Added `summary` (concatenated rich text) and `embedding` (768-dim vector using model `nomic-ai/nomic-embed-text-v1.5`).
+
+---
+
+## 📊 Data Schema
+
+The table below includes the 8 most important original columns and 3 newly added columns to support semantic search capabilities.
+
+| Field Name | Data Type | Source | Description |
+|:---|:---|:---:|:---|
+| **CMPLID** | CHAR(9) | Original | Unique ID for the complaint (Primary Key). |
+| **MAKETXT** | CHAR(25) | Original | Vehicle Make (e.g., TOYOTA, FORD). |
+| **MODELTXT** | CHAR(256)| Original | Vehicle Model (e.g., CAMRY, MUSTANG). |
+| **YEARTXT** | CHAR(4) | Original | Model Year of the vehicle. |
+| **FAILDATE** | DATE | Original | Date of the incident (YYYY-MM-DD). |
+| **COMPDESC** | CHAR(256)| Original | Description of the specific component involved (comdesc). |
+| **CDESCR** | TEXT | Original | Detailed consumer complaint narrative. |
+| **MILES** | NUMBER(7)| Original | Vehicle mileage at the time of failure. |
+| **summary** | TEXT | **New** | **(New Column)** Concatenated rich text combining: `MFR_NAME`, `MODELTXT`, `COMPDESC`, and `CDESCR`. Used as input for embedding generation. |
+| **embedding** | VECTOR(768)| **New** | **(New Column)** 768-dimensional vector derived from the `summary` column. Generated using model **`nomic-ai/nomic-embed-text-v1.5`**. |
+| **\*_RAW_DATE** | TEXT | **New** | **(New Column)** Contains the raw string value for dates that failed parsing. Valid dates are formatted correctly; invalid data is preserved here for debugging. |
+
+---
+
+### 💡 Details on New Fields
+
+1.  **`summary`**:
+    *   **Purpose:** Creates a single rich text field so the AI model understands the full context of the complaint (Manufacturer + Model + Component + Details).
+    *   **Logic:** Concatenates the relevant text fields.
+
+2.  **`embedding`**:
+    *   **Purpose:** Enables similarity search in vector databases (e.g., Pinecone, Milvus, pgvector).
+    *   **Model:** `nomic-ai/nomic-embed-text-v1.5`.
+    *   **Dimensions:** 768.
+
+3.  **`_RAW_DATE`**:
+    *   **Purpose:** Preserves original data integrity for auditing. If a date cannot be parsed into a standard format, it is moved here to prevent data loss.
+
+
+
+### Evaluations
+1. 
+| case_id | category | component_hit_rate | faithfulness | llm_context_precision_without_reference | answer_relevancy |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| EVAL-01 | airbag_nondeployment | 0.95 | 0.150000 | 0.116993 | 0.000000 |
+| EVAL-02 | unintended_acceleration_ambiguous | 1.00 | 0.285714 | 0.265703 | 0.845759 |
+| EVAL-03 | steering_loss | 0.00 | 0.583333 | 0.052632 | 0.838621 |
+| EVAL-04 | ev_battery_fire | 0.85 | 0.136364 | 0.000000 | 0.856997 |
+| EVAL-05 | fuel_leak_engine_fire | 0.00 | 0.263158 | 0.000000 | 0.840019 |
