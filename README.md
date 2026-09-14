@@ -46,7 +46,8 @@ The table below includes the 8 most important original columns and 3 newly added
 
 
 ### Evaluations
-1. 
+1. Initially:
+
 | case_id | category | component_hit_rate | faithfulness | llm_context_precision_without_reference | answer_relevancy |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | EVAL-01 | airbag_nondeployment | 0.95 | 0.150000 | 0.116993 | 0.000000 |

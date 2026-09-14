@@ -27,4 +27,4 @@ def action_node(state: AgentState) -> dict:
 {references}
 """
     print("    -> đã render report markdown")
-    return {"draft_report": final_report}
+    return {"report": final_report}

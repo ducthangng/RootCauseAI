@@ -46,7 +46,7 @@ from ragas.run_config import RunConfig
 # ---------------------------------------------------------------------------
 # 0. Config
 # ---------------------------------------------------------------------------
-EVAL_SET_PATH = Path(__file__).resolve().parents[2] / "assets" / "eval_sets.jsonl"
+EVAL_SET_PATH = Path(__file__).resolve().parents[2] / "evals" / "eval_sets.jsonl"
 OUT_CSV_PATH = Path(__file__).resolve().parents[2] / "assets" / "ragas_results.csv"
 
 # Use a DIFFERENT judge model than your pipeline's gpt-4o-mini generator.
@@ -105,23 +105,20 @@ def run_incident_through_graph(incident_text: str) -> dict:
 
     return final_state
 
-
-def docs_to_context_strings(retrieved_docs: list[dict]) -> list[str]:
-    """
+"""
     Turn your RetrievedDoc records into the flat strings ragas expects for
     `retrieved_contexts`. Keep enough structure that an LLM judge (and you,
     reading the CSV later) can tell WHICH vehicle/component a context came
     from -- that's what makes the component-match sanity check below legible.
     """
+def docs_to_context_strings(retrieved_docs: list[dict]) -> list[str]:
     return [
         f"[doc_id={d['id']} mfr={d['mfr_name']} model={d['modeltxt']} "
         f"component={d['compdesc']}] {d['cdescr']}"
         for d in retrieved_docs
     ]
 
-
-def component_hit_rate(retrieved_docs: list[dict], expected_component: str) -> float:
-    """
+"""
     Cheap, deterministic, zero-LLM-cost check: what fraction of retrieved
     docs actually belong to the NHTSA component category this incident is
     about? This is your first line of defense -- run it before you burn
@@ -130,7 +127,8 @@ def component_hit_rate(retrieved_docs: list[dict], expected_component: str) -> f
     Do NOT expect 1.0. A real RCA case legitimately pulls some cross-
     component context (e.g. a wiring-harness doc showing up for an airbag
     non-deployment). Treat a hit rate near 0 as the real alarm.
-    """
+"""
+def component_hit_rate(retrieved_docs: list[dict], expected_component: str) -> float:   
     if not retrieved_docs:
         return 0.0
     hits = sum(1 for d in retrieved_docs if expected_component.upper() in d["compdesc"].upper())

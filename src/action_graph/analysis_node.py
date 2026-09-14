@@ -49,7 +49,7 @@ Respond in English, as a concise paragraph, with inline incident citations.
     response = openai_client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.2,
+        temperature=0,
     )
     draft = response.choices[0].message.content
     print(f"    -> new draft ({len(draft)} chars)")

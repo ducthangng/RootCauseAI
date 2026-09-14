@@ -39,6 +39,15 @@ PASS CRITERIA:
   or the report is generic without grounding each specific claim in a citation
   ("could be due to multiple causes" with no citation = FAIL).
 
+If most retrieved documents describe the same symptom without a
+technician/manufacturer-diagnosed cause, the analysis MUST state this
+evidentiary limitation explicitly (e.g. "most similar complaints report
+the same symptom but do not identify a diagnosed cause") and may still
+PASS while expressing appropriate uncertainty. Only mark FAIL if:
+(a) the analysis presents speculation as established fact,
+(b) it fails to flag weak evidence when the evidence actually is weak, or
+(c) a cited case does not genuinely support the claim it's attached to.
+
 If FAIL, the critique must state EXACTLY what is missing or incorrect.
 """
 
