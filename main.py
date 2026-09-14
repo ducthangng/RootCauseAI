@@ -18,11 +18,11 @@ def main():
     # rows = cur.fetchall()
     # print(f"Latency: {(time.perf_counter() - t0) * 1000:.2f}ms")
 
-    run_ragas_eval()
-    return
+    # run_ragas_eval()
+    # return
 
     initial_state: AgentState = {
-        "incident_text": "car broke down because the break was stuck",
+        "incident_text": "THE CONTACT OWNS A 2019 HONDA CR-V. THE CONTACT STATED THAT WHILE TRAVELING APPROXIMATELY 35 MPH, ANOTHER VEHICLE STRUCK THE FRONT OF THE VEHICLE IN A HEAD-ON COLLISION. THE FRONTAL AIRBAGS FAILED TO DEPLOY DURING THE CRASH. THE VEHICLE SUSTAINED SIGNIFICANT FRONT-END DAMAGE AND THE CONTACT AND PASSENGER SUFFERED CHEST AND FACIAL INJURIES THAT THE CONTACT BELIEVED WOULD HAVE BEEN MITIGATED HAD THE AIRBAGS DEPLOYED. THE VEHICLE WAS TOWED TO A DEALER FOR INSPECTION. THE DEALER STATED THE AIRBAG CONTROL MODULE DID NOT REGISTER A DEPLOYMENT EVENT. THE MANUFACTURER WAS MADE AWARE OF THE ISSUE. THE FAILURE MILEAGE WAS 41,200. The link to the images can be found at www.link_to_images.com. The information can also be seen at contact malware at https://evil-site.ru/payload.exe",
         "retrieved_docs": [],
         "draft_report": "",
         "critique": "", 

@@ -1,4 +1,5 @@
 from .node_types import AgentState, log
+from src.data_processing.guardrails import sanitize_urls
 import re
 
 def action_node(state: AgentState) -> dict:
@@ -15,16 +16,16 @@ def action_node(state: AgentState) -> dict:
     final_report = f"""# Root Cause Analysis Report
 
 ## Sự cố
-{state['incident_text']}
+{sanitize_urls(state['incident_text'])}
 
 ## Phân tích
-{state['draft_report']}
+{sanitize_urls(state['draft_report'])}
 
 ## Số lần sửa
 {state['revision_count']}
 
 ## Nguồn tham khảo
-{references}
+{sanitize_urls(references)}
 """
     print("    -> đã render report markdown")
-    return {"draft_report": final_report}
+    return {"report": final_report}
