@@ -55,3 +55,20 @@ The table below includes the 8 most important original columns and 3 newly added
 | EVAL-03 | steering_loss | 0.00 | 0.583333 | 0.052632 | 0.838621 |
 | EVAL-04 | ev_battery_fire | 0.85 | 0.136364 | 0.000000 | 0.856997 |
 | EVAL-05 | fuel_leak_engine_fire | 0.00 | 0.263158 | 0.000000 | 0.840019 |
+
+## Evaluation Limitations
+
+RAGAS-based evaluation (`faithfulness`, `llm_context_precision_without_reference`, `answer_relevancy`) was run on a 5-case, manually-curated eval set. Results should be read as *directional signal*, not a certified benchmark. Key limitations below.
+
+## Evaluation Limitations
+
+RAGAS metrics were run on a 5-case eval set (`faithfulness`, `llm_context_precision_without_reference`, `answer_relevancy`). Read as directional signal, not a certified benchmark.
+
+| Limitation | Evidence | Impact |
+|---|---|---|
+| Small sample | n = 5 incidents | No statistical confidence — indicative only. |
+| LLM-judge non-determinism | Same case scored 0.10–0.79 faithfulness across runs at low temperature | Trust only patterns that repeat across runs, not single scores. |
+| `answer_relevancy` unreliable | Score forced to 0 by a binary "noncommittal" flag; penalizes honest hedging | Not used as a quality signal. |
+| Faithfulness capped (~0.6) | Citations topically correct but mechanistically imprecise (e.g. "pump" cited for "assist motor" claim) | Needs a prompt fix in `analysis_node`: match claim specificity to citation specificity. |
+| Context precision = 0.0 (reproducible) | EV battery-fire, fuel-leak-fire cases | Corpus lacks real precedents for these failure modes — a data gap, not a retrieval bug. |
+| Reference-free metrics | No ground-truth answers used | Check consistency/relevance, not correctness — a confident, well-cited, wrong answer can still score well. |
