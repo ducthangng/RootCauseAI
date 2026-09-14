@@ -19,6 +19,7 @@ class AgentState(TypedDict):
     revision_count: int
     max_revision: int
     status: Literal["pending", "pass", "fail"]
+    report: str
 
 def log(node_name: str, state: AgentState) -> None:
     print(f"\n>>> ĐANG CHẠY NODE: {node_name}")

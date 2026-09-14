@@ -63,7 +63,7 @@ evaluator_embeddings = LangchainEmbeddingsWrapper(OpenAIEmbeddings())
 # ---------------------------------------------------------------------------
 # 1. Wire in YOUR graph here
 # ---------------------------------------------------------------------------
-def run_incident_through_graph(incident_text: str) -> dict:
+def run_incident_through_graph(incident_text: str, id: str) -> dict:
     """
     Replace the body of this function with a call into your compiled
     StateGraph. It must return the FINAL AgentState dict (i.e. after the
@@ -101,7 +101,15 @@ def run_incident_through_graph(incident_text: str) -> dict:
     print("=" * 60)
 
     graph = build_graph()
-    final_state = graph.invoke(initial_state)
+    # final_state = graph.invoke(initial_state)
+    final_state = graph.invoke(
+        initial_state,
+        config={
+            "run_name": f"incident-{id}",   # hoặc odino/cmplid nếu có sẵn
+            "tags": ["rootcause-ai"],
+            "metadata": {"incident_id": id},
+        },
+    )
 
     return final_state
 
@@ -146,7 +154,7 @@ def build_ragas_rows() -> list[dict]:
         cases = [json.loads(line) for line in f if line.strip()]
 
     for case in cases:
-        final_state = run_incident_through_graph(case["incident_text"])
+        final_state = run_incident_through_graph(case["incident_text"], case["case_id"])
 
         hit_rate = component_hit_rate(final_state["retrieved_docs"], case["expected_component"])
         print(

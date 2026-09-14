@@ -1,6 +1,7 @@
 # clients.py
 import os
 from .node_types import AgentState, log
+from langsmith.wrappers import wrap_openai
 from dotenv import load_dotenv
 from openai import OpenAI
 from sentence_transformers import SentenceTransformer
@@ -10,7 +11,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 load_dotenv()
 
-openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+openai_client = wrap_openai(OpenAI(api_key=os.environ["OPENAI_API_KEY"]))
 embed_model = SentenceTransformer("nomic-ai/nomic-embed-text-v1.5", trust_remote_code=True, device="mps")
 
 db_pool = pool.ThreadedConnectionPool(
