@@ -1,5 +1,5 @@
 from .node_types import AgentState, log
-from src.data_processing.guardrails import sanitize_urls
+from ingestion_service.ingest.guardrails import sanitize_urls
 import re
 
 def action_node(state: AgentState) -> dict:

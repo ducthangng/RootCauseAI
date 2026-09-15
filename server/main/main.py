@@ -1,7 +1,7 @@
-import src.data_processing.clean_data as clean_data
-import src.data_processing.inject_data as inject_data
-import src.data_processing.copy_data as copy_data
-from src.action_graph import build_graph, run_ragas_eval, AgentState
+import server.data_processing.clean_data as clean_data
+import server.data_processing.inject_data as inject_data
+import server.data_processing.copy_data as copy_data
+from server.action_graph import build_graph, run_ragas_eval, AgentState
 
 import time
 
