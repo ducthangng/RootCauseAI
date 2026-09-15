@@ -7,6 +7,38 @@ This document describes the data structure after cleaning, slimming down, and en
 *   **Cleaned:** Fixed date parsing errors; moved invalid date strings to the `_RAW_DATE` column.
 *   **Enriched:** Added `summary` (concatenated rich text) and `embedding` (768-dim vector using model `nomic-ai/nomic-embed-text-v1.5`).
 
+root_cause_ai/
+├── ingestion_service/            # lifecycle: trigger bởi file event, batch, không cần layer sâu
+│   ├── watcher.py
+│   ├── chunker.py
+│   └── vectorstore_writer.py
+│
+├── server/                  # lifecycle: request/response API — clean architecture skeleton
+│   ├── domain/
+│   │   ├── entities.py           # Query, RetrievedChunk, Answer
+│   │   └── ports.py              # Protocol: Retriever, Generator, VectorStoreRepository
+│   ├── application/
+│   │   └── use_cases/
+│   │       └── answer_question.py   # chỉ phụ thuộc Protocol, không biết FastAPI/LangGraph tồn tại
+│   ├── adapters/
+│   │   ├── api/
+│   │   │   └── router.py          # FastAPI /query, gọi use case
+│   │   ├── retrieval/
+│   │   │   └── pgvector_retriever.py   # implement Retriever
+│   │   └── generation/
+│   │       └── llm_client.py      # implement Generator, LangGraph nếu dùng nằm ở đây
+│   └── main/
+│       ├── app.py                 # DI wiring, assemble FastAPI app
+│       └── config.py
+│
+├── shared/                         # import bởi cả 2 service — bắt buộc, không phải DRY tuỳ chọn
+│   ├── embeddings.py                # 1 nguồn duy nhất cho embedding model/version
+│   └── vectorstore_client.py
+│
+└── data/                             # runtime, gitignored
+    ├── incoming/
+    ├── processed/
+    └── failed/
 ---
 
 ## 📊 Data Schema
