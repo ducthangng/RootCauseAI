@@ -1,5 +1,7 @@
 from pathlib import Path
 
+AWS_BUCKET_NAME = "root-cause-ai"
+
 COLUMNS = [
     "CMPLID", "ODINO", "MFR_NAME", "MAKETXT", "MODELTXT", "YEARTXT",
     "CRASH", "FAILDATE", "FIRE", "INJURED", "DEATHS", "COMPDESC",
@@ -14,6 +16,9 @@ COLUMNS = [
     "STATE_OF_INCIDENT", "VEHICLE_OPERATOR",
 ]  # 51 fields, official NHTSA CMPL layout — position matters, this is not negotiable
 
+def get_raw_path():
+    return Path(__file__).resolve().parents[2] / "data/processed"
+
 def build_input_path(filename: str):
     return Path(__file__).resolve().parents[2] / "data/incoming" / f"{filename}"
 
@@ -21,7 +26,8 @@ def build_output_path(filename: str):
     return Path(__file__).resolve().parents[2] / "data/processed" / f"{filename}"
 
 def build_bad_row_path(filename: str):
-    return Path(__file__).resolve().parents[2] / "data/incoming" / f"{filename}"
+    return Path(__file__).resolve().parents[2] / "data/failed" / f"{filename}"
 
-# INPUT_PATH = Path(__file__).resolve().parents[3] / "data/incoming" / f"{}csv"
+
+
 

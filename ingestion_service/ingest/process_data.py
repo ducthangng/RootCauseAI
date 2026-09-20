@@ -3,8 +3,10 @@ import pandas as pd
 import csv
 import sys
 import logging
-from .process_data_type import COLUMNS, build_input_path, build_output_path, build_bad_row_path
+from .process_data_type import COLUMNS, build_input_path, build_output_path, build_bad_row_path, get_raw_path, AWS_BUCKET_NAME
 from .guardrails import sanitize_urls
+from .push import upload_to_s3
+from datetime import datetime, timezone
 
 csv.field_size_limit(sys.maxsize)
 log = logging.getLogger("processer")
@@ -25,8 +27,6 @@ def clean_data(filename: str):
         low_memory=False
         # nrows=100
     )
-
-    df.to_csv(build_output_path("1test.csv"), index=False)
 
     # script "
     df = df.apply(lambda col: col.str.replace('"', '', regex=False))
@@ -97,4 +97,16 @@ def clean_data(filename: str):
     # !TODO: add rich texts
     df['summary'] = 'a ' + df['MAKETXT'] + " model " + df['MODELTXT'] + " produced in " + df["YEARTXT"] + " was " + df['COMPDESC'] + " with detail: " + df['CDESCR']
 
-    return df.to_csv(build_output_path(filename=filename), index=False)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT_%H%M%SZ")
+
+    raw_filename = filename.removesuffix((".csv"))
+    new_filename = f"{raw_filename}_{stamp}.csv"
+    output_path = build_output_path(filename=new_filename)
+
+    log.info(f"writing -> {output_path}")
+    df.to_csv(output_path, index=False)
+
+    log.info(f"pushing to S3 {AWS_BUCKET_NAME}...")
+    upload_to_s3(output_path, AWS_BUCKET_NAME, new_filename)
+
+    

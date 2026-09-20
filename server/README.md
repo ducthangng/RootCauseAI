@@ -104,3 +104,7 @@ RAGAS metrics were run on a 5-case eval set (`faithfulness`, `llm_context_precis
 | Faithfulness capped (~0.6) | Citations topically correct but mechanistically imprecise (e.g. "pump" cited for "assist motor" claim) | Needs a prompt fix in `analysis_node`: match claim specificity to citation specificity. |
 | Context precision = 0.0 (reproducible) | EV battery-fire, fuel-leak-fire cases | Corpus lacks real precedents for these failure modes — a data gap, not a retrieval bug. |
 | Reference-free metrics | No ground-truth answers used | Check consistency/relevance, not correctness — a confident, well-cited, wrong answer can still score well. |
+
+
+
+
