@@ -15,6 +15,7 @@ import logging
 from pathlib import Path
 from typing import Callable
 from ingest.process_data import clean_data
+from ingest.lambda_function import lambda_handler
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("folder_watcher")
@@ -125,3 +126,4 @@ if __name__ == "__main__":
     except ImportError:
         log.warning("watchdog not installed, falling back to polling")
         watch_folder_polling(WATCH_DIR)
+    lambda_handler()

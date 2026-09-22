@@ -1,0 +1,5 @@
+// Input (execution input của Step Functions)
+{ "jobId": "abc123", "bucket": "root-cause-ai", "rawKey": "raw/abc123/data.csv" }
+
+//  Output của Lambda
+{ "jobId": "abc123", "bucket": "root-cause-ai", "cleanedKey": "cleaned/abc123/data.parquet", "rows": 12345 }
