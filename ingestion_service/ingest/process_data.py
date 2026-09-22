@@ -3,20 +3,24 @@ import pandas as pd
 import csv
 import sys
 import logging
-from .process_data_type import COLUMNS, build_input_path, build_output_path, build_bad_row_path, get_raw_path, AWS_BUCKET_NAME
-from .guardrails import sanitize_urls
-from .push import upload_to_s3
+from process_data_type import COLUMNS, build_input_path, build_output_path, build_bad_row_path, get_raw_path, AWS_BUCKET_NAME
+from guardrails import sanitize_urls
+# from .push import upload_to_s3
 from datetime import datetime, timezone
 
 csv.field_size_limit(sys.maxsize)
 log = logging.getLogger("processer")
 
-def clean_data(filename: str):
-    log.info(f" -- processing: {filename}")
-    log.info(f" -- path: {build_input_path(filename=filename)}")
+# Input (execution input của Step Functions)
+# { "jobId": "abc123", "bucket": "root-cause-ai", "rawKey": "raw/abc123/data.csv" }
+
+# Output của Lambda
+# { "jobId": "abc123", "bucket": "root-cause-ai", "cleanedKey": "cleaned/abc123/data.parquet", "rows": 12345 }
+
+def clean_data(input_dir, output_dir: str) -> int:
     # first rule of reading data: always read as string first, then convert each column later.
     df = pd.read_csv(
-        build_input_path(filename),
+        input_dir,
         sep="\t",
         header=None,
         names=COLUMNS,
@@ -97,16 +101,15 @@ def clean_data(filename: str):
     # !TODO: add rich texts
     df['summary'] = 'a ' + df['MAKETXT'] + " model " + df['MODELTXT'] + " produced in " + df["YEARTXT"] + " was " + df['COMPDESC'] + " with detail: " + df['CDESCR']
 
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT_%H%M%SZ")
+    log.info(f"writing -> {output_dir}")
 
-    raw_filename = filename.removesuffix((".csv"))
-    new_filename = f"{raw_filename}_{stamp}.csv"
-    output_path = build_output_path(filename=new_filename)
+    df.to_csv(output_dir, index=False)
 
-    log.info(f"writing -> {output_path}")
-    df.to_csv(output_path, index=False)
+    rows = len(df.index)
 
-    log.info(f"pushing to S3 {AWS_BUCKET_NAME}...")
-    upload_to_s3(output_path, AWS_BUCKET_NAME, new_filename)
+    return rows
+
+    # log.info(f"pushing to S3 {AWS_BUCKET_NAME}...")
+    # upload_to_s3(output_dir, AWS_BUCKET_NAME, output_dir)
 
     
