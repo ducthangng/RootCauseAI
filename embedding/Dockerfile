@@ -13,4 +13,4 @@ RUN python -c "from sentence_transformers import SentenceTransformer; \
 
 COPY s3.sagemaker.process.py .
 
-ENTRYPOINT ["python3", "/opt/app/process.py"]
+ENTRYPOINT ["python3", "/opt/app/s3.sagemaker.process.py"]
