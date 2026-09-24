@@ -9,3 +9,4 @@ langchain-core==1.6.2
 openai==3.12.0
 python-dotenv==1.2.3
 transformers==4.39.3
+uvicorn[standard]==0.53.0
