@@ -23,6 +23,7 @@ jobs:
         id: ecr-login
 
       - name: Build and push
+        working-directory: rag-service
         env:
           REGISTRY: ${{ steps.ecr-login.outputs.registry }}
         run: |
