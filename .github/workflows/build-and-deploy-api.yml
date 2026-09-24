@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "rag-service/**"
+      - ".github/workflows/build-and-deploy-api.yml"
   workflow_dispatch: {}
 
 jobs:
