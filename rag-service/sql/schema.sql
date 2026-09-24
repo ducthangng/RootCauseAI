@@ -1,21 +1,23 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 
-CREATE TABLE IF NOT EXISTS complaints (
+DROP TABLE IF EXISTS complaints;
+
+CREATE TABLE complaints (
     id                  SERIAL PRIMARY KEY,
 
-    -- Identity fields (NOT NULL theo yêu cầu)
-    cmplid              CHAR(9)     NOT NULL,
-    odino               CHAR(9)     NOT NULL,
+    -- Identity fields
+    cmplid              VARCHAR(9)  NOT NULL UNIQUE,  -- VARCHAR thay CHAR: tránh tự pad khoảng trắng làm lệch UNIQUE/ON CONFLICT
+    odino               VARCHAR(9)  NOT NULL,
     mfr_name            VARCHAR(40),
 
     -- Vehicle / equipment info
     maketxt             VARCHAR(25),
     modeltxt            VARCHAR(256),
     yeartxt             CHAR(4),
-    crash               CHAR(1),
+    crash               BOOLEAN,                       -- đổi từ CHAR(1) 'Y'/'N' sang BOOLEAN, khớp *bool bên Go
     faildate            DATE,
-    faildate_raw_invalid       TEXT,
-    fire                CHAR(1),
+    faildate_raw_invalid TEXT,
+    fire                BOOLEAN,
     injured             NUMERIC(10, 2),
     deaths              NUMERIC(10, 2),
     compdesc            TEXT,
@@ -24,22 +26,22 @@ CREATE TABLE IF NOT EXISTS complaints (
     vin                 CHAR(11),
 
     datea               DATE,
-    datea_raw_invalid          TEXT,
+    datea_raw_invalid   TEXT,
     ldate               DATE,
-    ldate_raw_invalid          TEXT,
+    ldate_raw_invalid   TEXT,
 
     miles               NUMERIC(10, 2),
     occurences          NUMERIC(10, 2),
     cdescr              TEXT,
     cmpl_type           VARCHAR(4),
-    police_rpt_yn       CHAR(1),
+    police_rpt_yn       BOOLEAN,
 
     purch_dt            DATE,
-    purch_dt_raw_invalid       TEXT,
+    purch_dt_raw_invalid TEXT,
 
-    orig_owner_yn       CHAR(1),
-    anti_brakes_yn      CHAR(1),
-    cruise_cont_yn      CHAR(1),
+    orig_owner_yn       BOOLEAN,
+    anti_brakes_yn      BOOLEAN,
+    cruise_cont_yn      BOOLEAN,
     num_cyls            NUMERIC(10, 2),
     drive_train         VARCHAR(4),
     fuel_sys            VARCHAR(4),
@@ -51,10 +53,10 @@ CREATE TABLE IF NOT EXISTS complaints (
     tire_size           VARCHAR(30),
     loc_of_tire         VARCHAR(4),
     tire_fail_type      VARCHAR(4),
-    orig_equip_yn       CHAR(1),
+    orig_equip_yn       BOOLEAN,
 
     manuf_dt            DATE,
-    manuf_dt_raw_invalid       TEXT,
+    manuf_dt_raw_invalid TEXT,
 
     seat_type           VARCHAR(4),
     restraint_type      VARCHAR(4),
@@ -66,9 +68,9 @@ CREATE TABLE IF NOT EXISTS complaints (
     dealer_zip          VARCHAR(10),
 
     prod_type           VARCHAR(4),
-    repaired_yn         CHAR(1),
-    medical_attn        CHAR(1),
-    vehicles_towed_yn   CHAR(1),
+    repaired_yn         BOOLEAN,
+    medical_attn        BOOLEAN,
+    vehicles_towed_yn   BOOLEAN,
     state_of_incident   CHAR(2),
     vehicle_operator    VARCHAR(40),
 
@@ -77,10 +79,7 @@ CREATE TABLE IF NOT EXISTS complaints (
     embedding           vector(768)
 );
 
--- Index tìm kiếm theo id/complaint gốc (ODINO có thể lặp lại giữa nhiều component)
-CREATE INDEX IF NOT EXISTS idx_complaints_odino ON complaints (odino);
-CREATE INDEX IF NOT EXISTS idx_complaints_cmplid ON complaints (cmplid);
+CREATE INDEX idx_complaints_odino ON complaints (odino);
 
--- Vector index cho ANN search bằng cosine distance
-CREATE INDEX IF NOT EXISTS idx_complaints_embedding
+CREATE INDEX idx_complaints_embedding
     ON complaints USING hnsw (embedding vector_cosine_ops);

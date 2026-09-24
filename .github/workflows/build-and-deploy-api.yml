@@ -1,0 +1,47 @@
+name: Build and deploy RAG API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "rag-service/**"
+  workflow_dispatch: {}
+
+jobs:
+  build-push:
+    runs-on: ubuntu-24.04-arm   # runner ARM native — build đúng arch, không emulation
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-1
+
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr-login
+
+      - name: Build and push
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          docker build -t $REGISTRY/rootcause-api:latest .
+          docker push $REGISTRY/rootcause-api:latest
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_API_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_API_SSH_KEY }}
+          script: |
+            aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin ${{ steps.ecr-login.outputs.registry }}
+            docker pull ${{ steps.ecr-login.outputs.registry }}/rootcause-api:latest
+            docker stop rootcause-api || true
+            docker rm rootcause-api || true
+            docker run -d --name rootcause-api \
+              --restart unless-stopped \
+              -p 127.0.0.1:8000:8000 \
+              --env-file /home/ec2-user/rootcause-api/.env \
+              ${{ steps.ecr-login.outputs.registry }}/rootcause-api:latest
