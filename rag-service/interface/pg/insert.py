@@ -4,14 +4,8 @@ from pgvector.psycopg2 import register_vector
 from contextlib import contextmanager
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
-
-DB_CONFIG = {
-    "host": "localhost",
-    "port": 5432,
-    "dbname": "rootcauseai",
-    "user": "rootcauseai",
-    "password": "changeme",
-}
+from server.domain.entity import ProcessJobMessage
+from .conn import get_conn
 
 EMBED_MODEL_NAME = "nomic-ai/nomic-embed-text-v1.5"
 EMBED_DIM = 768  # must match `vector(768)` in schema.sql
@@ -21,6 +15,8 @@ BATCH_SIZE_EMBED = 64
 # and device='mps' to actually use the M3 Pro GPU instead of falling back to CPU.
 _model = SentenceTransformer(EMBED_MODEL_NAME, trust_remote_code=True, device="mps")
 
+def insert_job_queue(job: ProcessJobMessage):
+    return
 
 def embed_batch(texts: list[str]) -> list[list[float]]:
     # Nomic REQUIRES this task prefix on anything you store/search as a document —
@@ -33,20 +29,6 @@ def embed_batch(texts: list[str]) -> list[list[float]]:
         normalize_embeddings=True,  # required: we index with vector_cosine_ops
     )
     return embeddings.tolist()
-
-
-@contextmanager
-def get_conn():
-    conn = psycopg2.connect(**DB_CONFIG)
-    register_vector(conn)  # lets psycopg2 accept python list -> pgvector type
-    try:
-        yield conn
-        conn.commit()
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        conn.close()
 
 
 def insert_dataframe(df, table="complaints", batch_size=500):
