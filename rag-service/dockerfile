@@ -1,6 +1,11 @@
-FROM pgvector/pgvector:pg16
+FROM python:3.11-slim
 
-# pgvector extension đã build sẵn trong image này, không cần compile thêm.
-# Copy schema để tự động chạy khi container khởi tạo lần đầu (Postgres entrypoint
-# chạy mọi *.sql trong /docker-entrypoint-initdb.d/ theo thứ tự tên file).
-COPY schema.sql /docker-entrypoint-initdb.d/01-schema.sql
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+CMD ["uvicorn", "server.http_app:app", "--host", "0.0.0.0", "--port", "8000"]
