@@ -83,3 +83,5 @@ CREATE INDEX idx_complaints_odino ON complaints (odino);
 
 CREATE INDEX idx_complaints_embedding
     ON complaints USING hnsw (embedding vector_cosine_ops);
+    
+Truncate complaints;
