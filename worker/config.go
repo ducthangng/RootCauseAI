@@ -35,11 +35,13 @@ type Env struct {
 	DBUser             string
 	DBPassword         string
 	DBName             string
+	DBSSLMode          string
 }
 
 func loadEnv() (*Env, error) {
 	viper.SetConfigFile(".env")
 	viper.SetConfigType("env")
+	viper.SetDefault("DB_SSLMODE", "require")
 
 	if err := viper.ReadInConfig(); err != nil {
 		var notFound viper.ConfigFileNotFoundError
@@ -63,6 +65,7 @@ func loadEnv() (*Env, error) {
 		DBUser:             viper.GetString("DB_USER"),
 		DBPassword:         viper.GetString("DB_PASSWORD"),
 		DBName:             viper.GetString("DB_NAME"),
+		DBSSLMode:          viper.GetString("DB_SSLMODE"),
 	}
 
 	if err := validateEnv(e); err != nil {
@@ -101,22 +104,6 @@ func awsConfig(ctx context.Context, e *Env) (aws.Config, error) {
 	)
 }
 
-func buildDatabaseURL() string {
-	sslMode := "disable"
-	if os.Getenv("DB_HOST") != "localhost" {
-		sslMode = "require" // Supabase bắt buộc SSL, localhost dev thì không cần
-	}
-	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-		sslMode,
-	)
-}
-
 func getPool(ctx context.Context) (*pgxpool.Pool, error) {
 
 	connString := fmt.Sprintf(
@@ -126,6 +113,7 @@ func getPool(ctx context.Context) (*pgxpool.Pool, error) {
 		env.DBHost,
 		env.DBPort,
 		env.DBName,
+		env.DBSSLMode,
 	)
 
 	pgOnce.Do(func() {
