@@ -11,6 +11,8 @@ on:
 jobs:
   build-push:
     runs-on: ubuntu-latest
+    outputs:
+      registry: ${{ steps.ecr-login.outputs.registry }}
     steps:
       - uses: actions/checkout@v4
 
@@ -31,6 +33,10 @@ jobs:
           docker build -t $REGISTRY/rootcause-api:latest .
           docker push $REGISTRY/rootcause-api:latest
 
+  deploy:
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -38,12 +44,12 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_API_SSH_KEY }}
           script: |
-            aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin ${{ steps.ecr-login.outputs.registry }}
-            docker pull ${{ steps.ecr-login.outputs.registry }}/rootcause-api:latest
+            aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin ${{ needs.build-push.outputs.registry }}
+            docker pull ${{ needs.build-push.outputs.registry }}/rootcause-api:latest
             docker stop rootcause-api || true
             docker rm rootcause-api || true
             docker run -d --name rootcause-api \
               --restart unless-stopped \
               -p 127.0.0.1:8000:8000 \
               --env-file /home/ec2-user/rootcause-api/.env \
-              ${{ steps.ecr-login.outputs.registry }}/rootcause-api:latest
+              ${{ needs.build-push.outputs.registry }}/rootcause-api:latest
