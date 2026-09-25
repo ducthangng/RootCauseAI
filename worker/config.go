@@ -107,7 +107,7 @@ func awsConfig(ctx context.Context, e *Env) (aws.Config, error) {
 func getPool(ctx context.Context) (*pgxpool.Pool, error) {
 
 	connString := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		url.QueryEscape(env.DBUser),
 		url.QueryEscape(env.DBPassword),
 		env.DBHost,
