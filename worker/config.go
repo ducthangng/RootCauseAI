@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/url"
 	"os"
@@ -42,7 +43,7 @@ func loadEnv() (*Env, error) {
 
 	if err := viper.ReadInConfig(); err != nil {
 		var notFound viper.ConfigFileNotFoundError
-		if !errors.As(err, &notFound) {
+		if !errors.As(err, &notFound) && !errors.Is(err, fs.ErrNotExist) {
 			return nil, fmt.Errorf("read .env: %w", err)
 		}
 		wd, _ := os.Getwd()
