@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
+	"net/url"
 	"os"
 	"sync"
 
@@ -10,6 +13,7 @@ import (
 	config "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -33,37 +37,57 @@ type Env struct {
 }
 
 func loadEnv() (*Env, error) {
-	e := &Env{
-		AWSAccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
-		AWSSecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
-		AWSRegion:          os.Getenv("AWS_REGION"),
-		SQSQueueURL:        os.Getenv("SQS_QUEUE_URL"),
-		S3Bucket:           os.Getenv("S3_BUCKET"),
-		DBHost:             os.Getenv("DB_HOST"),
-		DBPort:             os.Getenv("DB_PORT"),
-		DBUser:             os.Getenv("DB_USER"),
-		DBPassword:         os.Getenv("DB_PASSWORD"),
-		DBName:             os.Getenv("DB_NAME"),
+	viper.SetConfigFile(".env")
+	viper.SetConfigType("env")
+
+	if err := viper.ReadInConfig(); err != nil {
+		var notFound viper.ConfigFileNotFoundError
+		if !errors.As(err, &notFound) {
+			return nil, fmt.Errorf("read .env: %w", err)
+		}
+		wd, _ := os.Getwd()
+		log.Printf("no .env found in %s, reading from real environment variables", wd)
 	}
 
-	// fail nhanh lúc start, không để tới lúc gọi API mới lòi ra thiếu biến — đúng thứ đang gây khó debug cho bạn
-	required := map[string]string{
-		"AWS_ACCESS_KEY_ID":     e.AWSAccessKeyID,
-		"AWS_SECRET_ACCESS_KEY": e.AWSSecretAccessKey,
-		"AWS_REGION":            e.AWSRegion,
-		"SQS_QUEUE_URL":         e.SQSQueueURL,
-		"S3_BUCKET":             e.S3Bucket,
-		"DB_HOST":               e.DBHost,
-		"DB_USER":               e.DBUser,
-		"DB_PASSWORD":           e.DBPassword,
-		"DB_NAME":               e.DBName,
+	viper.AutomaticEnv()
+
+	e := &Env{
+		AWSAccessKeyID:     viper.GetString("AWS_ACCESS_KEY_ID"),
+		AWSSecretAccessKey: viper.GetString("AWS_SECRET_ACCESS_KEY"),
+		AWSRegion:          viper.GetString("AWS_REGION"),
+		SQSQueueURL:        viper.GetString("SQS_QUEUE_URL"),
+		S3Bucket:           viper.GetString("S3_BUCKET"),
+		DBHost:             viper.GetString("DB_HOST"),
+		DBPort:             viper.GetString("DB_PORT"),
+		DBUser:             viper.GetString("DB_USER"),
+		DBPassword:         viper.GetString("DB_PASSWORD"),
+		DBName:             viper.GetString("DB_NAME"),
 	}
-	for name, val := range required {
-		if val == "" {
-			return nil, fmt.Errorf("missing required env var: %s", name)
-		}
+
+	if err := validateEnv(e); err != nil {
+		return nil, err
 	}
 	return e, nil
+}
+
+func validateEnv(e *Env) error {
+	required := map[string]string{
+		"SQS_QUEUE_URL": e.SQSQueueURL,
+		"DB_HOST":       e.DBHost,
+		"DB_PORT":       e.DBPort,
+		"DB_USER":       e.DBUser,
+		"DB_NAME":       e.DBName,
+	}
+	var missing []string
+	for k, v := range required {
+		if v == "" {
+			missing = append(missing, k)
+		}
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("missing required env vars: %v", missing)
+	}
+	return nil
 }
 
 // dùng cho cả SQS lẫn S3 client — 1 nguồn config duy nhất, khỏi lệch region như lỗi vừa gặp
@@ -93,14 +117,23 @@ func buildDatabaseURL() string {
 }
 
 func getPool(ctx context.Context) (*pgxpool.Pool, error) {
+
+	connString := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		url.QueryEscape(env.DBUser),
+		url.QueryEscape(env.DBPassword),
+		env.DBHost,
+		env.DBPort,
+		env.DBName,
+	)
+
 	pgOnce.Do(func() {
-		cfg, err := pgxpool.ParseConfig(buildDatabaseURL())
-		if err != nil {
-			pgErr = fmt.Errorf("parse database url: %w", err)
+		pgPool, pgErr = pgxpool.New(ctx, connString)
+		if pgErr != nil {
+			pgErr = fmt.Errorf("parse database url: %w", pgErr)
 			return
 		}
-		cfg.MaxConns = 5 // Supabase pooler giới hạn connection, đừng để Go tự mở tràn lan
-		pgPool, pgErr = pgxpool.NewWithConfig(ctx, cfg)
 	})
+
 	return pgPool, pgErr
 }
