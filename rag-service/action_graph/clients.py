@@ -6,13 +6,14 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from sentence_transformers import SentenceTransformer
 from psycopg2 import pool
+from utils.device import pick_device
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 load_dotenv()
 
 openai_client = wrap_openai(OpenAI(api_key=os.environ["OPENAI_API_KEY"]))
-embed_model = SentenceTransformer("nomic-ai/nomic-embed-text-v1.5", trust_remote_code=True, device="mps")
+embed_model = SentenceTransformer("nomic-ai/nomic-embed-text-v1.5", trust_remote_code=True, device=pick_device())
 
 db_pool = pool.ThreadedConnectionPool(
     minconn=1,
