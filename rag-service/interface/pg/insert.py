@@ -6,14 +6,22 @@ from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 from server.domain.entity import ProcessJobMessage
 from .conn import get_conn
+import torch
 
 EMBED_MODEL_NAME = "nomic-ai/nomic-embed-text-v1.5"
 EMBED_DIM = 768  # must match `vector(768)` in schema.sql
 BATCH_SIZE_EMBED = 64
 
+def pick_device() -> str:
+    if torch.cuda.is_available():
+        return "cuda"
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
 # nomic-embed-text requires trust_remote_code=True (custom rotary-embedding arch)
 # and device='mps' to actually use the M3 Pro GPU instead of falling back to CPU.
-_model = SentenceTransformer(EMBED_MODEL_NAME, trust_remote_code=True, device="mps")
+_model = SentenceTransformer(EMBED_MODEL_NAME, trust_remote_code=True, device=pick_device())
 
 def insert_job_queue(job: ProcessJobMessage):
     return
