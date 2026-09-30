@@ -99,13 +99,6 @@ All resources above are still hand-configured via Console, not Terraform — see
 
 Demo/portfolio deployment, torn down between sessions. Not production-hardened (see [Known gaps](#known-gaps)).
 
-## Known gaps
-
-# RootCause AI — Architecture Retrospective
-
-**Scope:** the AWS-native ingestion pipeline and the RAG service behind RootCause AI (NHTSA complaints → root-cause-analysis report).
-**State as of 2026-09-30:** end-to-end pipeline works; the hand-built AWS stack is being torn down; Terraform respin planned (EC2 + RDS ephemeral, VPC permanent).
-
 > **Evidence rule.** Everything below comes from the project notes or from the AWS console / Cost Explorer screens checked on 2026-09-30. Text tagged *(inferred)*, *(hypothesis)*, *(suggestion)* or *(general)* is analysis, not a recorded fact. Incidents that are not on record are **not** listed — add them with the template in Appendix B.
 
 ## TL;DR
