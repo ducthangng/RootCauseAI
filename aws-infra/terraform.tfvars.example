@@ -1,0 +1,21 @@
+# cp terraform.tfvars.example terraform.tfvars   (gitignored) and fill in.
+# These are the ONLY values you edit by hand.
+
+region            = "eu-central-1"                   # region of your existing VPC
+vpc_id            = "vpc-0123456789abcdef0"          # the permanent VPC
+public_subnet_id  = "subnet-0aaaaaaaaaaaaaaaa"       # public subnet (route to IGW) for EC2
+db_subnet_ids     = ["subnet-0bbbbbbbbbbbbbbbb", "subnet-0cccccccccccccccc"]  # 2+ AZs
+route53_zone_id   = "Z0123456789ABCDEFGHIJ"          # zone containing api_fqdn
+api_fqdn          = "api.aws.rootcause.ducthang.dev" # lowercase
+letsencrypt_email = "you@example.com"
+artifacts_bucket  = "your-existing-bucket"           # needs releases/ + certs/ prefixes; keep it private (holds the cert key)
+
+# Optional overrides
+# use_staging_cert  = true   # while debugging user_data; delete the line for the real cert
+# instance_type     = "t3.small"
+# app_module        = "app.main:app"
+# release_key       = "releases/rag-api-latest.tar.gz"
+
+# CI side (one step in your GitHub Action instead of ssh):
+#   tar czf rag-api.tgz -C backend . && aws s3 cp rag-api.tgz s3://<bucket>/releases/rag-api-latest.tar.gz
+# requirements.txt must be at the archive root and include uvicorn.
