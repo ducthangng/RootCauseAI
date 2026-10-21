@@ -44,41 +44,12 @@ flowchart LR
     API -- "RCA report + citations" --> U
 ```
 
-## RAG Pipeline
+- **Uploads go straight to S3** through a presigned URL, so large files never pass through the API.
+- **Each stage writes to S3, and events carry only the file key.** Any stage can be re-run from the previous stage's output, and raw data stays untouched.
+- **SQS sits in front of the database** and absorbs bursts. Failed messages go to a dead-letter queue.
+- **The query API runs as a persistent service**, not a Lambda, because one report takes several LLM calls and needs a warm database pool.
 
-`retrieve_node` → `analysis_node` → `evaluation_node` → (fail & under max_revision → back to `analysis_node`; pass or max_revision hit → `action_node`)
-
-## Tech Stack
-
-- **Orchestration**: LangGraph (StateGraph)
-- **Embedding**: nomic-ai/nomic-embed-text-v1.5 (768-dim, HNSW m=24/ef_construction=200)
-- **LLM**: gpt-4o-mini
-- **Vector store**: Postgres + pgvector (RDS)
-- **API**: FastAPI, deployed on EC2 behind nginx (TLS via Let's Encrypt)
-- **Async worker**: Go, AWS Lambda (`provided.al2023`, arm64), SQS-triggered
-- **Frontend**: React/TypeScript on Vercel
-- **IaC**: manual for now, Terraform planned
-
-## AWS
-
-- **Region**: `ap-southeast-1`
-- **S3**: `root-cause-ai` (`raw/` → cleaned by Lambda, `processed/` → embedded CSV output)
-- **SQS**: `rootcause-load-queue` (event source mapping, `ReportBatchItemFailures` enabled)
-- **RDS**: `rootcause-db` — PostgreSQL + pgvector, private subnet, `sslmode=require`
-- **Lambda**: `rootcause-insert-worker` — Go, `provided.al2023`/arm64, VPC-attached
-- **EC2**: RAG API host — Elastic IP + `<eip>.nip.io` domain for Let's Encrypt TLS
-- **ECR**: `rootcause-api` repo
-- **VPC**: S3 Gateway Endpoint attached to Lambda's route table (no NAT Gateway — keeps free tier)
-- **Security Groups**: `lambda-worker-sg`, RDS SG, EC2 `default` SG — cross-referenced by SG id, not CIDR
-- **IAM (Lambda execution role)**: `AWSLambdaVPCAccessExecutionRole`, `AWSLambdaSQSQueueExecutionRole`, inline `s3:GetObject` on `root-cause-ai/*`
-
-All resources above are still hand-configured via Console, not Terraform — see [Known gaps](#known-gaps).
-
-## Status
-
-Demo/portfolio deployment, torn down between sessions. Not production-hardened (see [Known gaps](#known-gaps)).
-
-> **Evidence rule.** Everything below comes from the project notes or from the AWS console / Cost Explorer screens checked on 2026-09-30. Text tagged *(inferred)*, *(hypothesis)*, *(suggestion)* or *(general)* is analysis, not a recorded fact. Incidents that are not on record are **not** listed — add them with the template in Appendix B.
+## The RAG loop
 
 ```mermaid
 flowchart LR
@@ -129,10 +100,8 @@ Full write-up with every incident: [docs/RETROSPECTIVE.md](docs/RETROSPECTIVE.md
 
 Working end-to-end. It's a demo deployment, torn down between sessions, and the infrastructure is being moved from hand-built to Terraform.
 
-- [Step Functions — service integration patterns](https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html)
-- [API Gateway — integration timeout beyond 29 s (June 2024)](https://aws.amazon.com/about-aws/whats-new/2024/06/amazon-api-gateway-integration-timeout-limit-29-seconds/)
-- [Lambda — SQS event source mapping](https://docs.aws.amazon.com/lambda/latest/dg/services-sqs-configure.html)
-- [pgvector 0.8.0 — iterative index scans](https://docs.pgedge.com/pgvector/v0-8-0/iterative-index-scans/)
-- [SageMaker — ResourceLimitExceeded and quotas](https://repost.aws/knowledge-center/sagemaker-resource-limit-exceeded-error)
-- [S3 uploads — presigned POST vs PUT](https://aws.amazon.com/blogs/networking-and-content-delivery/implementing-secure-file-uploads-to-amazon-s3-at-the-edge-choosing-the-right-pattern)
-- [Amazon VPC pricing](https://aws.amazon.com/vpc/pricing/)
+Next:
+- Faithfulness metrics with Ragas.
+- A judge from a different model family.
+- Prompt-injection guardrails, because complaint text is public input.
+- LangSmith tracing.
